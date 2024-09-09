@@ -29,7 +29,7 @@ M.code_spell = function()
         local result = {
           file = file,
           loc = {
-            row = row - 1,
+            row = row,
             col = col,
           },
           incorrect_word = incorrect_word,
@@ -43,7 +43,7 @@ M.code_spell = function()
     for _, item in ipairs(M.corrections) do
       table.insert(quickfix_list, {
         filename = item.file,
-        lnum = item.loc.row + 1,
+        lnum = item.loc.row,
         col = item.loc.col,
         text = string.format('Unknown word: %s. Suggestions: %s', item.incorrect_word, table.concat(item.suggestions, ', ')),
       })
@@ -59,16 +59,17 @@ M.code_spell = function()
 end
 
 M.show_word_suggestions = function()
-  local word = vim.fn.expand '<cword>'
   local winid = vim.api.nvim_get_current_win()
-  local cursor_orginal_pos = vim.api.nvim_win_get_cursor(winid)
-  vim.cmd 'normal! b'
   local row, col = unpack(vim.api.nvim_win_get_cursor(winid))
-  row = row - 1
-  col = col
-  vim.api.nvim_win_set_cursor(winid, cursor_orginal_pos)
-
+  col = col + 1 -- adjust to 1-based index
+  vim.cmd 'normal! eb'
+  local word = vim.fn.expand '<cword>'
   local buf = vim.api.nvim_get_current_buf()
+
+  local _, word_start_col = unpack(vim.api.nvim_win_get_cursor(winid))
+  word_start_col = word_start_col + 1 -- adjust to 1-based index
+
+  vim.api.nvim_win_set_cursor(winid, { row, col - 1 })
 
   if #M.corrections == 0 then
     print 'call CSpell to populate misspelled words'
@@ -76,16 +77,17 @@ M.show_word_suggestions = function()
   end
 
   for _, item in ipairs(M.corrections) do
-    if item.loc.row == row and string.find(word, item.incorrect_word) then
-      local curr_suggestions = {}
+    local curr_suggestions = {}
+    if item.loc.row == row and item.loc.col == col then
       for _, suggestion in ipairs(item.suggestions) do
         local curr_suggestion = string.gsub(word, item.incorrect_word, suggestion)
         table.insert(curr_suggestions, curr_suggestion)
       end
-      M.show_suggestions(curr_suggestions, buf, row, col, #word)
+      M.show_suggestions(curr_suggestions, buf, row, word_start_col, #word)
       return
     end
   end
+  print 'no suggestions found for word'
 end
 
 M.show_suggestions = function(suggestions, main_buf, main_row, replace_line_start_col, cover_length)
@@ -95,6 +97,9 @@ M.show_suggestions = function(suggestions, main_buf, main_row, replace_line_star
     table.insert(ordered_suggestions, string.format('%d. %s', index, suggestion))
   end
   local selected_spell_index = vim.fn.inputlist(ordered_suggestions)
+  if selected_spell_index == 0 then
+    return
+  end
   local selected_suggestion = suggestions[selected_spell_index]
   util.replace_text_in_row(main_buf, main_row, replace_line_start_col, selected_suggestion, cover_length)
 end
