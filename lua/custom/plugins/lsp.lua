@@ -32,6 +32,9 @@ return {
             vim.keymap.set('n', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
           end
 
+          local map_visual = function(keys, func, desc)
+            vim.keymap.set('v', keys, func, { buffer = event.buf, desc = 'LSP: ' .. desc })
+          end
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.
           --  To jump back, press <C-t>.
@@ -64,6 +67,7 @@ return {
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
           map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
+          map_visual('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction')
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
@@ -223,6 +227,7 @@ return {
       'saadparwaiz1/cmp_luasnip',
       'hrsh7th/cmp-nvim-lsp',
       'hrsh7th/cmp-path',
+      'hrsh7th/cmp-buffer',
     },
     config = function()
       -- See `:help cmp`
@@ -298,6 +303,7 @@ return {
           },
           { name = 'nvim_lsp' },
           { name = 'luasnip' },
+          { name = 'buffer', keyword_length = 5 },
           { name = 'path' },
         },
       }

@@ -33,6 +33,7 @@ return {
           },
         },
       }
+      -- require('dapui').setup()
       require('dap-go').setup()
 
       -- Handled by nvim-dap-go

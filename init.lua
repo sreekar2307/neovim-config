@@ -99,7 +99,6 @@ vim.g.maplocalleader = ' '
 
 -- optionally enable 24-bit colour
 vim.opt.termguicolors = true
-
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 
@@ -246,7 +245,9 @@ vim.opt.rtp:prepend(lazypath)
 -- require('lazy').setup 'plugins'
 -- NOTE: Here is where you install your plugins.
 require('lazy').setup({
-  'github/copilot.vim',
+  {
+    'github/copilot.vim',
+  },
   'tpope/vim-sleuth',
   { -- Adds git related signs to the gutter, as well as utilities for managing changes
     'lewis6991/gitsigns.nvim',
@@ -348,5 +349,16 @@ require('lazy').setup({
   },
 })
 
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = '*', -- Apply to all file types
+  callback = function()
+    vim.opt_local.readonly = false
+  end,
+})
+vim.api.nvim_create_autocmd('BufReadPost', {
+  callback = function()
+    vim.opt_local.readonly = false
+  end,
+})
 -- The line beneath this is called `modeline`. See `:help modeline`
 -- vim: ts=2 sts=2 sw=2 et
